@@ -21,28 +21,29 @@ public class ConnectAndDownload {
                         HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
                         con = (HttpsURLConnection) myUrl.openConnection();
                         con.addRequestProperty("User-Agent","Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:56.0) Gecko/20100101 Firefox/56.0");
-                        if (con.getContentLength() == -1) {
+                        int responseCode = con.getResponseCode();
+                        if (responseCode != 200) {
                                 ConsoleHelper.print("Некорректный адрес web-страницы, попробуйте повторно.");
                                 return false;
                         }
                 } catch (IOException | ClassCastException e) {
                         logger.error(e.getMessage(), e);
                         ConsoleHelper.print("Ошибка при попытке соединения с сетью.");
+                        return false;
                 } catch (NoSuchAlgorithmException | KeyManagementException e) {
                         logger.error(e.getMessage(), e);
+                        return false;
                 }
-                if (con != null) {
-                        try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-                             BufferedWriter bw = new BufferedWriter(new FileWriter(fileName))) {
-                                String inputLine;
-                                while ((inputLine = in.readLine()) != null) {
-                                        bw.write(inputLine);
-                                }
-                                return true;
-                        } catch (IOException e) {
-                                ConsoleHelper.print("Ошибка при попытке записать файл на диск.");
-                                logger.error(e.getMessage(), e);
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                     BufferedWriter bw = new BufferedWriter(new FileWriter(fileName))) {
+                        String inputLine;
+                        while ((inputLine = in.readLine()) != null) {
+                                bw.write(inputLine);
                         }
+                        return true;
+                } catch (IOException e) {
+                        ConsoleHelper.print("Ошибка при попытке записать файл на диск.");
+                        logger.error(e.getMessage(), e);
                 }
                 return false;
         }
